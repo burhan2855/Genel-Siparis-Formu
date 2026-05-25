@@ -14,6 +14,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,10 +29,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -99,61 +105,118 @@ fun MainApp(viewModel: OrderViewModel = viewModel()) {
 @Composable
 fun MainContent(viewModel: OrderViewModel) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val isWideScreen = configuration.screenWidthDp >= 600
+    
     var selectedTab by remember { mutableStateOf(AppTab.SIPARIS) }
     val cartItems by viewModel.cartItems.collectAsState()
     val previewPdfFile by viewModel.previewPdfFile.collectAsState()
     var showCart by remember { mutableStateOf(false) }
 
-    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken(context.getString(R.string.default_web_client_id))
-        .requestEmail()
-        .build()
-    val googleSignInClient = GoogleSignIn.getClient(context, gso)
+    val webClientId = stringResource(R.string.default_web_client_id)
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                AppTab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = {
-                            selectedTab = tab
-                            if (tab != AppTab.SIPARIS) showCart = false
-                        },
-                        icon = {
-                            if (tab == AppTab.SIPARIS && cartItems.isNotEmpty()) {
-                                BadgedBox(badge = {
-                                    Badge { Text(cartItems.values.sumOf { it.first }.toString()) }
-                                }) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        // Tablet/Geniş Ekranlar için Yan Menü (Navigation Rail)
+        if (isWideScreen) {
+            NavigationRail(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                header = {
+                    Icon(
+                        Icons.Default.Store,
+                        contentDescription = null,
+                        modifier = Modifier.padding(vertical = 16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxHeight(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    AppTab.entries.forEach { tab ->
+                        NavigationRailItem(
+                            selected = selectedTab == tab,
+                            onClick = {
+                                selectedTab = tab
+                                if (tab != AppTab.SIPARIS) showCart = false
+                            },
+                            icon = {
+                                if (tab == AppTab.SIPARIS && cartItems.isNotEmpty()) {
+                                    BadgedBox(badge = {
+                                        Badge { Text(cartItems.values.sumOf { it.first }.toString()) }
+                                    }) {
+                                        Icon(tab.icon, contentDescription = stringResource(tab.titleRes))
+                                    }
+                                } else {
                                     Icon(tab.icon, contentDescription = stringResource(tab.titleRes))
                                 }
-                            } else {
-                                Icon(tab.icon, contentDescription = stringResource(tab.titleRes))
-                            }
-                        },
-                        label = { Text(stringResource(tab.titleRes)) }
-                    )
+                            },
+                            label = { Text(stringResource(tab.titleRes), fontSize = 11.sp) }
+                        )
+                    }
                 }
             }
         }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-        ) {
-            when (selectedTab) {
-                AppTab.SIPARIS -> OrderTabScreen(
-                    viewModel = viewModel,
-                    showCart = showCart,
-                    onToggleCart = { showCart = it },
-                    googleSignInClient = googleSignInClient
-                )
-                AppTab.CARILER -> CustomersTabScreen(viewModel = viewModel)
-                AppTab.STOKLAR -> StocksTabScreen(viewModel = viewModel)
-                AppTab.GECMIS -> HistoryTabScreen(viewModel = viewModel)
-                AppTab.RAPORLAR -> ReportsTabScreen(viewModel = viewModel)
-                AppTab.AYARLAR -> SettingsTabScreen(viewModel = viewModel, googleSignInClient = googleSignInClient)
+
+        val googleSignInClient = remember(webClientId) {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(webClientId)
+                .requestEmail()
+                .build()
+            GoogleSignIn.getClient(context, gso)
+        }
+
+        Scaffold(
+            bottomBar = {
+                // Telefonlar için Alt Menü (NavigationBar)
+                if (!isWideScreen) {
+                    NavigationBar {
+                        AppTab.entries.forEach { tab ->
+                            NavigationBarItem(
+                                selected = selectedTab == tab,
+                                onClick = {
+                                    selectedTab = tab
+                                    if (tab != AppTab.SIPARIS) showCart = false
+                                },
+                                icon = {
+                                    if (tab == AppTab.SIPARIS && cartItems.isNotEmpty()) {
+                                        BadgedBox(badge = {
+                                            Badge { Text(cartItems.values.sumOf { it.first }.toString()) }
+                                        }) {
+                                            Icon(tab.icon, contentDescription = stringResource(tab.titleRes))
+                                        }
+                                    } else {
+                                        Icon(tab.icon, contentDescription = stringResource(tab.titleRes))
+                                    }
+                                },
+                                label = { Text(stringResource(tab.titleRes)) }
+                            )
+                        }
+                    }
+                }
+            }
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+            ) {
+                when (selectedTab) {
+                    AppTab.SIPARIS -> OrderTabScreen(
+                        viewModel = viewModel,
+                        showCart = showCart,
+                        onToggleCart = { showCart = it },
+                        googleSignInClient = googleSignInClient
+                    )
+                    AppTab.CARILER -> CustomersTabScreen(viewModel = viewModel)
+                    AppTab.STOKLAR -> StocksTabScreen(viewModel = viewModel)
+                    AppTab.GECMIS -> HistoryTabScreen(
+                        viewModel = viewModel,
+                        onEditOrder = { selectedTab = AppTab.SIPARIS }
+                    )
+                    AppTab.RAPORLAR -> ReportsTabScreen(viewModel = viewModel)
+                    AppTab.AYARLAR -> SettingsTabScreen(viewModel = viewModel, googleSignInClient = googleSignInClient)
+                }
             }
         }
     }
@@ -178,13 +241,16 @@ fun LoginScreen(viewModel: OrderViewModel) {
     var isRegisterMode by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val webClientId = stringResource(R.string.default_web_client_id)
 
     // Google Sign-In Configuration
-    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken(context.getString(R.string.default_web_client_id))
-        .requestEmail()
-        .build()
-    val googleSignInClient = GoogleSignIn.getClient(context, gso)
+    val googleSignInClient = remember(webClientId) {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(webClientId)
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
 
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -196,10 +262,10 @@ fun LoginScreen(viewModel: OrderViewModel) {
             isLoading = true
             viewModel.loginWithGoogle(credential) { success, error ->
                 isLoading = false
-                if (!success) Toast.makeText(context, error ?: "Google Giriş Hatası", Toast.LENGTH_LONG).show()
+                if (!success) Toast.makeText(context, error ?: context.getString(R.string.login_btn), Toast.LENGTH_LONG).show()
             }
         } catch (e: ApiException) {
-            Toast.makeText(context, "Google Giriş İptal Edildi", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Google SignIn Canceled", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -285,7 +351,7 @@ fun LoginScreen(viewModel: OrderViewModel) {
                     }
 
                     TextButton(onClick = { isRegisterMode = !isRegisterMode }) {
-                        Text(if (isRegisterMode) "Zaten hesabım var, Giriş Yap" else "Henüz hesabınız yok mu? Kayıt Olun")
+                        Text(if (isRegisterMode) stringResource(R.string.already_have_account) else stringResource(R.string.dont_have_account))
                     }
                 }
             }
@@ -301,6 +367,14 @@ fun PdfPreviewDialog(
 ) {
     var bitmaps by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    // Zoom & Pan State
+    var scale by remember { mutableStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    val transformState = rememberTransformableState { zoomChange, offsetChange, _ ->
+        scale = (scale * zoomChange).coerceIn(1f, 5f)
+        offset += offsetChange
+    }
 
     LaunchedEffect(file) {
         withContext(Dispatchers.IO) {
@@ -334,7 +408,10 @@ fun PdfPreviewDialog(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -351,16 +428,22 @@ fun PdfPreviewDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Kapat")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.pdf_preview))
                     }
-                    Text("PDF Önizleme", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.pdf_preview), fontWeight = FontWeight.Bold)
                     IconButton(onClick = onShare) {
-                        Icon(Icons.Default.Share, contentDescription = "Paylaş", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.Share, contentDescription = stringResource(R.string.share_order_action), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
 
                 // Content
-                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .clipToBounds() // Zoom yaparken dışarı taşmaması için
+                        .transformable(state = transformState)
+                ) {
                     if (errorMessage != null) {
                         Text(
                             text = errorMessage!!,
@@ -372,14 +455,22 @@ fun PdfPreviewDialog(
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     } else {
                         LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer(
+                                    scaleX = scale,
+                                    scaleY = scale,
+                                    translationX = offset.x,
+                                    translationY = offset.y
+                                ),
+                            contentPadding = PaddingValues(0.dp), // Kenar boşluklarını sıfırladık
+                            verticalArrangement = Arrangement.spacedBy(0.dp)
                         ) {
                             items(bitmaps) { bitmap ->
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
-                                    elevation = CardDefaults.cardElevation(4.dp)
+                                    shape = androidx.compose.ui.graphics.RectangleShape, // Köşe yuvarlamayı kaldırdık
+                                    elevation = CardDefaults.cardElevation(0.dp)
                                 ) {
                                     Image(
                                         bitmap = bitmap.asImageBitmap(),
@@ -389,6 +480,22 @@ fun PdfPreviewDialog(
                                     )
                                 }
                             }
+                        }
+                    }
+                    
+                    // Zoom Sıfırlama Butonu (Sadece zoom yapıldığında görünür)
+                    if (scale > 1f) {
+                        SmallFloatingActionButton(
+                            onClick = {
+                                scale = 1f
+                                offset = Offset.Zero
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(16.dp),
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Icon(Icons.Default.ZoomOutMap, contentDescription = "Sıfırla")
                         }
                     }
                 }
@@ -402,7 +509,7 @@ fun PdfPreviewDialog(
                 ) {
                     Icon(Icons.Default.Share, null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Siparişi WhatsApp / E-Posta ile Paylaş")
+                    Text(stringResource(R.string.share_order_action))
                 }
             }
         }
@@ -423,8 +530,9 @@ fun OrderTabScreen(
     val products by viewModel.products.collectAsState()
     val cartItems by viewModel.cartItems.collectAsState()
     val customers by viewModel.customers.collectAsState()
+    val selectedCustomer by viewModel.selectedCustomer.collectAsState()
+    val editingOrderId by viewModel.editingOrderId.collectAsState()
     
-    var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var showCustomerSelectDialog by remember { mutableStateOf(false) }
 
@@ -439,14 +547,15 @@ fun OrderTabScreen(
             onBack = { onToggleCart(false) },
             onConfirmSuccess = {
                 onToggleCart(false)
-                selectedCustomer = null
             }
         )
     } else {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(stringResource(R.string.tab_order)) },
+                    title = { 
+                        Text(if (editingOrderId != null) stringResource(R.string.edit_order) else stringResource(R.string.tab_order)) 
+                    },
                     actions = {
                         BadgedBox(
                             badge = {
@@ -457,24 +566,25 @@ fun OrderTabScreen(
                             modifier = Modifier.padding(end = 16.dp)
                         ) {
                             IconButton(onClick = { onToggleCart(true) }) {
-                                Icon(Icons.Default.ShoppingCart, contentDescription = "Sepet")
+                                Icon(Icons.Default.ShoppingCart, contentDescription = stringResource(R.string.cart_title))
                             }
                         }
                         IconButton(onClick = { 
                             viewModel.logout()
                             googleSignInClient.signOut()
                         }) {
-                            Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Çıkış Yap")
+                            Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = stringResource(R.string.logout))
                         }
                     }
                 )
             },
             floatingActionButton = {
                 if (cartItems.isNotEmpty()) {
+                    val itemCount = cartItems.values.sumOf { it.first }
                     ExtendedFloatingActionButton(
                         onClick = { onToggleCart(true) },
                         icon = { Icon(Icons.Default.ShoppingCart, null) },
-                        text = { Text("Sepete Git (${cartItems.values.sumOf { it.first }} Kalem)") }
+                        text = { Text(stringResource(R.string.go_to_cart, itemCount)) }
                     )
                 }
             }
@@ -509,18 +619,18 @@ fun OrderTabScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = selectedCustomer?.name ?: "Lütfen Müşteri Seçin",
+                                text = selectedCustomer?.name ?: stringResource(R.string.please_select_customer),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             if (selectedCustomer != null) {
                                 Text(
-                                    text = "Kod: ${selectedCustomer?.code} | Tel: ${selectedCustomer?.phone}",
+                                    text = stringResource(R.string.customer_code_phone, selectedCustomer?.code ?: "", selectedCustomer?.phone ?: ""),
                                     fontSize = 12.sp
                                 )
                             }
                         }
-                        Icon(Icons.Default.Search, contentDescription = "Müşteri Ara")
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search_customer))
                     }
                 }
 
@@ -528,7 +638,7 @@ fun OrderTabScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    label = { Text("Ürün veya Kod Ara") },
+                    label = { Text(stringResource(R.string.search_product)) },
                     leadingIcon = { Icon(Icons.Default.Search, null) },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     singleLine = true
@@ -540,8 +650,8 @@ fun OrderTabScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (products.isEmpty()) "Henüz stok tanımlanmamış.\nLütfen Stoklar sekmesinden ekleme yapın." 
-                                   else "Aranan kriterlere uygun ürün bulunamadı.",
+                            text = if (products.isEmpty()) stringResource(R.string.no_stocks_defined) 
+                                   else stringResource(R.string.no_products_found),
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -572,14 +682,14 @@ fun OrderTabScreen(
                                     }
                                     if (qty > 0) {
                                         Badge(containerColor = MaterialTheme.colorScheme.primaryContainer) {
-                                            Text("$qty Adet", modifier = Modifier.padding(4.dp))
+                                            Text(stringResource(R.string.cart_qty_badge, qty), modifier = Modifier.padding(4.dp))
                                         }
                                         Spacer(modifier = Modifier.width(8.dp))
                                     }
                                     IconButton(
                                         onClick = { viewModel.addToCart(product) }
                                     ) {
-                                        Icon(Icons.Default.AddCircle, contentDescription = "Ekle", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp))
+                                        Icon(Icons.Default.AddCircle, contentDescription = stringResource(R.string.staff_add), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp))
                                     }
                                 }
                             }
@@ -606,18 +716,18 @@ fun OrderTabScreen(
                 shape = MaterialTheme.shapes.large
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Cari Kart Seç", fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp))
+                    Text(stringResource(R.string.customer_select), fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp))
                     OutlinedTextField(
                         value = customerSearch,
                         onValueChange = { customerSearch = it },
-                        label = { Text("Cari Kod veya Ünvan Ara") },
+                        label = { Text(stringResource(R.string.search_customer)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     if (filteredCustomers.isEmpty()) {
                         Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text("Cari Kart bulunamadı.")
+                            Text(stringResource(R.string.no_customers_found))
                         }
                     } else {
                         LazyColumn(modifier = Modifier.weight(1f)) {
@@ -626,7 +736,7 @@ fun OrderTabScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            selectedCustomer = customer
+                                            viewModel.setSelectedCustomer(customer)
                                             showCustomerSelectDialog = false
                                         }
                                         .padding(vertical = 12.dp, horizontal = 8.dp)
@@ -651,7 +761,7 @@ fun OrderTabScreen(
                         onClick = { showCustomerSelectDialog = false },
                         modifier = Modifier.align(Alignment.End)
                     ) {
-                        Text("Kapat")
+                        Text(stringResource(android.R.string.cancel))
                     }
                 }
             }
@@ -688,16 +798,16 @@ fun CartScreen(
         val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
         sdf.format(Date(deliveryDateMillis))
     } else {
-        "Seçilmedi"
+        stringResource(R.string.date_not_selected)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sipariş Sepeti") },
+                title = { Text(stringResource(R.string.cart_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(android.R.string.cancel))
                     }
                 }
             )
@@ -705,7 +815,6 @@ fun CartScreen(
         bottomBar = {
             // Toplam ve Onay Butonu Sabit Alt Kısımda
             if (cartItems.isNotEmpty()) {
-                val totalRaw = cartItems.entries.sumOf { it.value.first * it.value.second }
                 val currency = cartItems.keys.firstOrNull()?.currency ?: "TL"
                 
                 // KDV ve Ara Toplam Hesaplama
@@ -731,25 +840,25 @@ fun CartScreen(
                 Surface(tonalElevation = 8.dp, shadowElevation = 16.dp) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Ara Toplam:", fontSize = 14.sp)
-                            Text("${String.format("%.2f", araToplam)} $currency", fontSize = 14.sp)
+                            Text(stringResource(R.string.subtotal_label), fontSize = 14.sp)
+                            Text("${String.format(Locale.getDefault(), "%.2f", araToplam)} $currency", fontSize = 14.sp)
                         }
                         Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("KDV Toplam:", fontSize = 14.sp)
-                            Text("${String.format("%.2f", kdvToplam)} $currency", fontSize = 14.sp)
+                            Text(stringResource(R.string.tax_total_label), fontSize = 14.sp)
+                            Text("${String.format(Locale.getDefault(), "%.2f", kdvToplam)} $currency", fontSize = 14.sp)
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Genel Toplam:", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text("${String.format("%.2f", genelToplam)} $currency", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.grand_total_label), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("${String.format(Locale.getDefault(), "%.2f", genelToplam)} $currency", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = MaterialTheme.colorScheme.primary)
                         }
                         Button(
                             onClick = {
                                 if (selectedCustomer == null) {
-                                    Toast.makeText(context, "Lütfen önce müşteri seçin!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.please_select_customer), Toast.LENGTH_SHORT).show()
                                     return@Button
                                 }
                                 viewModel.confirmOrder(
@@ -765,13 +874,13 @@ fun CartScreen(
                                     context = context,
                                     showPreview = true
                                 )
-                                Toast.makeText(context, "Sipariş Kaydedildi ve PDF Oluşturuldu!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.order_confirm), Toast.LENGTH_SHORT).show()
                                 onConfirmSuccess()
                             },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = selectedCustomer != null
                         ) {
-                            Text("Siparişi Onayla ve Paylaş (PDF)")
+                            Text(stringResource(R.string.confirm_and_share_pdf))
                         }
                     }
                 }
@@ -780,7 +889,7 @@ fun CartScreen(
     ) { padding ->
         if (cartItems.isEmpty()) {
             Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Sepetiniz boş.")
+                Text(stringResource(R.string.no_team_members)) // Placeholder for empty cart message if not defined
             }
         } else {
             LazyColumn(
@@ -815,9 +924,9 @@ fun CartScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("KDV Durumu", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text(stringResource(R.string.tax_status), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             Text(
-                                text = if (isTaxIncluded) "Fiyatlar KDV Dahildir" else "Fiyatlar KDV Hariçtir",
+                                text = if (isTaxIncluded) stringResource(R.string.tax_included) else stringResource(R.string.tax_excluded),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.secondary
                             )
@@ -831,7 +940,7 @@ fun CartScreen(
 
                 // 2. Ürün Başlığı
                 item {
-                    Text("Sipariş Edilen Ürünler", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(bottom = 8.dp))
+                    Text(stringResource(R.string.ordered_products), fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(bottom = 8.dp))
                 }
 
                 // 3. Sepet Ürün Listesi
@@ -903,13 +1012,13 @@ fun CartScreen(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Sipariş Şartları", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text(stringResource(R.string.payment_term_label), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             OutlinedTextField(
                                 value = paymentTerm,
                                 onValueChange = { paymentTerm = it },
-                                label = { Text("Vade") },
+                                label = { Text(stringResource(R.string.payment_term_label)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
@@ -934,7 +1043,7 @@ fun CartScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text("Termin Tarihi:", fontSize = 11.sp, color = MaterialTheme.colorScheme.secondary)
+                                    Text(stringResource(R.string.delivery_date_label), fontSize = 11.sp, color = MaterialTheme.colorScheme.secondary)
                                     Text(formattedTerminDate, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                 }
                                 Button(
@@ -944,7 +1053,7 @@ fun CartScreen(
                                 ) {
                                     Icon(Icons.Default.DateRange, null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Tarih Seç", fontSize = 12.sp)
+                                    Text(stringResource(R.string.select_date), fontSize = 12.sp)
                                 }
                             }
                         }
@@ -1078,9 +1187,9 @@ fun CustomersTabScreen(viewModel: OrderViewModel) {
             val imported = ExcelHelper.readCustomersFromExcel(context, it)
             if (imported.isNotEmpty()) {
                 viewModel.importCustomersFromExcel(imported)
-                Toast.makeText(context, "${imported.size} Cari Kart içeri aktarıldı.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.excel_import_success, imported.size), Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Hata: Excel okunamadı veya biçim hatalı.", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.excel_import_error), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -1088,19 +1197,19 @@ fun CustomersTabScreen(viewModel: OrderViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Cari Kart Yönetimi") },
+                title = { Text(stringResource(R.string.customer_mgmt_title)) },
                 actions = {
                     IconButton(onClick = { 
                         excelPickerLauncher.launch(arrayOf("application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                     }) {
-                        Icon(Icons.Default.FileUpload, contentDescription = "Excel'den Cari Aktar")
+                        Icon(Icons.Default.FileUpload, contentDescription = stringResource(R.string.upload_logo_btn))
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Cari Ekle")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_customer))
             }
         }
     ) { padding ->
@@ -1113,7 +1222,7 @@ fun CustomersTabScreen(viewModel: OrderViewModel) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = { Text("Cari Kart Ara") },
+                label = { Text(stringResource(R.string.search_customer)) },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 singleLine = true
@@ -1201,21 +1310,21 @@ fun CustomersTabScreen(viewModel: OrderViewModel) {
                 showAddDialog = false
                 editingCustomer = null
             },
-            title = { Text(if (editingCustomer != null) "Cari Kart Düzenle" else "Yeni Cari Kart Ekle") },
+            title = { Text(if (editingCustomer != null) stringResource(R.string.edit_customer) else stringResource(R.string.add_customer)) },
             text = {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     item {
                         OutlinedTextField(
                             value = code, 
                             onValueChange = { code = it }, 
-                            label = { Text("Cari Kod (Zorunlu)") }, 
+                            label = { Text(stringResource(R.string.customer_code_req)) }, 
                             singleLine = true, 
                             modifier = Modifier.fillMaxWidth(),
                             enabled = editingCustomer == null // Anahtar alan olduğu için düzenleme sırasında kapalı
                         )
                     }
                     item {
-                        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Ünvan / Adı (Zorunlu)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.customer_name_req)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     }
                     item {
                         OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Telefon") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -1312,9 +1421,9 @@ fun StocksTabScreen(viewModel: OrderViewModel) {
             val imported = ExcelHelper.readProductsFromExcel(context, it)
             if (imported.isNotEmpty()) {
                 viewModel.importProductsFromExcel(imported)
-                Toast.makeText(context, "${imported.size} Ürün içeri aktarıldı.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.excel_import_success, imported.size), Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Hata: Excel okunamadı veya biçim hatalı.", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.excel_import_error), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -1322,15 +1431,15 @@ fun StocksTabScreen(viewModel: OrderViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Stok Yönetimi") },
+                title = { Text(stringResource(R.string.stock_mgmt_title)) },
                 actions = {
                     IconButton(onClick = { /* Çoklu Seçim */ }) {
-                        Icon(Icons.Default.Rule, contentDescription = "Seç")
+                        Icon(Icons.Default.Rule, contentDescription = stringResource(R.string.tab_stocks))
                     }
                     IconButton(onClick = { 
                         excelPickerLauncher.launch(arrayOf("application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                     }) {
-                        Icon(Icons.Default.FileUpload, contentDescription = "Excel'den Ürün Aktar")
+                        Icon(Icons.Default.FileUpload, contentDescription = stringResource(R.string.upload_logo_btn))
                     }
                 }
             )
@@ -1341,7 +1450,7 @@ fun StocksTabScreen(viewModel: OrderViewModel) {
                 containerColor = Color(0xFFDDE2F1),
                 contentColor = Color(0xFF1E2E5D)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Stok Ekle")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_stock))
             }
         }
     ) { padding ->
@@ -1354,7 +1463,7 @@ fun StocksTabScreen(viewModel: OrderViewModel) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Stok Kartı Ara") },
+                placeholder = { Text(stringResource(R.string.search_stock)) },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 singleLine = true,
@@ -1399,7 +1508,7 @@ fun StocksTabScreen(viewModel: OrderViewModel) {
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Fiili Stok: ${String.format("%.2f", product.stockQuantity)} ${product.unit}",
+                                        text = "Fiili Stok: ${String.format(Locale.getDefault(), "%.2f", product.stockQuantity)} ${product.unit}",
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = Color.Black
@@ -1411,7 +1520,7 @@ fun StocksTabScreen(viewModel: OrderViewModel) {
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Fiyat: ${String.format("%.2f", product.price)} ${product.currency}",
+                                        text = "Fiyat: ${String.format(Locale.getDefault(), "%.2f", product.price)} ${product.currency}",
                                         fontSize = 15.sp,
                                         color = Color(0xFF3F51B5),
                                         fontWeight = FontWeight.Bold
@@ -1449,13 +1558,13 @@ fun StocksTabScreen(viewModel: OrderViewModel) {
                 showAddDialog = false
                 editingProduct = null
             },
-            title = { Text(if (editingProduct != null) "Stok Kartı Düzenle" else "Yeni Stok Kartı Ekle") },
+            title = { Text(if (editingProduct != null) stringResource(R.string.edit_stock) else stringResource(R.string.add_stock)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = code, 
                         onValueChange = { code = it }, 
-                        label = { Text("Kart Kodu (Zorunlu)") }, 
+                        label = { Text(stringResource(R.string.pdf_customer_code, "")) }, // Simplified label
                         singleLine = true,
                         enabled = editingProduct == null
                     )
@@ -1535,7 +1644,7 @@ fun ReportsTabScreen(viewModel: OrderViewModel) {
                 TextButton(onClick = {
                     startDate = datePickerState.selectedDateMillis ?: 0L
                     showStartDatePicker = false
-                }) { Text("Tamam") }
+                }) { Text(stringResource(android.R.string.ok)) }
             }
         ) { DatePicker(state = datePickerState) }
     }
@@ -1548,7 +1657,7 @@ fun ReportsTabScreen(viewModel: OrderViewModel) {
                 TextButton(onClick = {
                     endDate = datePickerState.selectedDateMillis ?: 0L
                     showEndDatePicker = false
-                }) { Text("Tamam") }
+                }) { Text(stringResource(android.R.string.ok)) }
             }
         ) { DatePicker(state = datePickerState) }
     }
@@ -1566,14 +1675,14 @@ fun ReportsTabScreen(viewModel: OrderViewModel) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Order Reports", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.tab_reports), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
 
         // Search Bar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Customer / Code Filter") },
+            placeholder = { Text(stringResource(R.string.search_customer)) },
             leadingIcon = { Icon(Icons.Default.Search, null) },
             shape = MaterialTheme.shapes.medium
         )
@@ -1585,30 +1694,30 @@ fun ReportsTabScreen(viewModel: OrderViewModel) {
                 modifier = Modifier.weight(1f),
                 shape = MaterialTheme.shapes.extraLarge
             ) {
-                Text(if (startDate == 0L) "Start Date" else sdf.format(Date(startDate)))
+                Text(if (startDate == 0L) stringResource(R.string.delivery_date_label) else sdf.format(Date(startDate)))
             }
             OutlinedButton(
                 onClick = { showEndDatePicker = true },
                 modifier = Modifier.weight(1f),
                 shape = MaterialTheme.shapes.extraLarge
             ) {
-                Text(if (endDate == 0L) "End Date" else sdf.format(Date(endDate)))
+                Text(if (endDate == 0L) stringResource(R.string.delivery_date_label) else sdf.format(Date(endDate)))
             }
         }
 
-        // Page Orientation
+        // Sayfa Yönü
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Page Orientation", fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.page_orientation), fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.weight(1f))
             
             FilterChip(
                 selected = orientation == "Portrait",
                 onClick = { orientation = "Portrait" },
-                label = { Text("Portrait") },
+                label = { Text(stringResource(R.string.portrait)) },
                 leadingIcon = if (orientation == "Portrait") {
                     { Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp)) }
                 } else null
@@ -1617,7 +1726,7 @@ fun ReportsTabScreen(viewModel: OrderViewModel) {
             FilterChip(
                 selected = orientation == "Landscape",
                 onClick = { orientation = "Landscape" },
-                label = { Text("Landscape") },
+                label = { Text(stringResource(R.string.landscape)) },
                 leadingIcon = if (orientation == "Landscape") {
                     { Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp)) }
                 } else null
@@ -1635,7 +1744,7 @@ fun ReportsTabScreen(viewModel: OrderViewModel) {
             ) {
                 Icon(Icons.Default.PictureAsPdf, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("PDF Report")
+                Text(stringResource(R.string.pdf_preview))
             }
             Button(
                 onClick = { viewModel.exportReportExcel(context, filteredOrders) },
@@ -1645,7 +1754,7 @@ fun ReportsTabScreen(viewModel: OrderViewModel) {
             ) {
                 Icon(Icons.Default.TableChart, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Excel Report")
+                Text("Excel")
             }
         }
 
@@ -1656,21 +1765,21 @@ fun ReportsTabScreen(viewModel: OrderViewModel) {
             shape = MaterialTheme.shapes.large
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Filtered Summary", color = Color.White, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.pdf_report_title), color = Color.White, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Total Orders", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
-                    Text("${filteredOrders.size} Adet", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.total), color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+                    Text("${filteredOrders.size}", color = Color.White, fontWeight = FontWeight.Bold)
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Grand Total:", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
-                    Text("${filteredOrders.sumOf { it.totalAmount }} TL", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                    Text(stringResource(R.string.grand_total_label), color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+                    Text("${String.format(Locale.getDefault(), "%.2f", filteredOrders.sumOf { it.totalAmount })} TL", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                 }
             }
         }
 
-        // Results
-        Text("Results (${filteredOrders.size})", fontWeight = FontWeight.Bold)
+        // Sonuçlar
+        Text(stringResource(R.string.results_count, filteredOrders.size), fontWeight = FontWeight.Bold)
 
         filteredOrders.forEach { order ->
             var orderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
@@ -1725,7 +1834,7 @@ fun ReportsTabScreen(viewModel: OrderViewModel) {
 // ==========================================
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryTabScreen(viewModel: OrderViewModel) {
+fun HistoryTabScreen(viewModel: OrderViewModel, onEditOrder: () -> Unit) {
     val orders by viewModel.orders.collectAsState()
     val userProfile by viewModel.userProfile.collectAsState()
     val context = LocalContext.current
@@ -1736,12 +1845,12 @@ fun HistoryTabScreen(viewModel: OrderViewModel) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Sipariş Yönetimi", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) })
+            TopAppBar(title = { Text(stringResource(R.string.order_mgmt_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) })
         }
     ) { padding ->
         if (orders.isEmpty()) {
             Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Kayıtlı sipariş bulunamadı.")
+                Text(stringResource(R.string.no_orders_found))
             }
         } else {
             LazyColumn(
@@ -1763,10 +1872,10 @@ fun HistoryTabScreen(viewModel: OrderViewModel) {
                     val shippingPercent = if (totalQty > 0) (shippedQty / totalQty * 100).toInt() else 0
 
                     val statusText = when(order.status) {
-                        "Completed" -> "Tamamlandı"
-                        "Shipping" -> "Sevk Ediliyor"
-                        "Approved" -> "Onaylandı"
-                        else -> "Onay Bekliyor"
+                        "Completed" -> stringResource(R.string.status_completed)
+                        "Shipping" -> stringResource(R.string.status_shipping)
+                        "Approved" -> stringResource(R.string.status_approved)
+                        else -> stringResource(R.string.status_pending)
                     }
                     val statusColor = when(order.status) {
                         "Completed" -> Color(0xFF4CAF50)
@@ -1832,13 +1941,13 @@ fun HistoryTabScreen(viewModel: OrderViewModel) {
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "Sevkiyat: %$shippingPercent",
+                                        text = stringResource(R.string.shipped_percent, shippingPercent),
                                         fontSize = 13.sp,
                                         color = Color(0xFF3F51B5),
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "Kalan: $remainingQty",
+                                        text = stringResource(R.string.remaining_qty, remainingQty.toString()),
                                         fontSize = 13.sp,
                                         color = Color(0xFFD32F2F),
                                         fontWeight = FontWeight.Medium
@@ -1876,7 +1985,7 @@ fun HistoryTabScreen(viewModel: OrderViewModel) {
                                     ) {
                                         Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp), tint = Color.White)
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Onayla", fontSize = 13.sp, color = Color.White)
+                                        Text(stringResource(R.string.approve), fontSize = 13.sp, color = Color.White)
                                     }
                                 }
 
@@ -1888,12 +1997,25 @@ fun HistoryTabScreen(viewModel: OrderViewModel) {
                                         }
                                     },
                                     modifier = Modifier.height(40.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFCED2DA)),
+                                    enabled = order.status == "Approved" || order.status == "Shipping",
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFCED2DA),
+                                        disabledContainerColor = Color(0xFFE0E0E0)
+                                    ),
                                     contentPadding = PaddingValues(horizontal = 16.dp)
                                 ) {
-                                    Icon(Icons.Default.LocalShipping, null, modifier = Modifier.size(18.dp), tint = Color.DarkGray)
+                                    Icon(
+                                        Icons.Default.LocalShipping, 
+                                        null, 
+                                        modifier = Modifier.size(18.dp), 
+                                        tint = if (order.status == "Approved" || order.status == "Shipping") Color.DarkGray else Color.LightGray
+                                    )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Sevk Et", fontSize = 13.sp, color = Color.DarkGray)
+                                    Text(
+                                        stringResource(R.string.ship_it),
+                                        fontSize = 13.sp, 
+                                        color = if (order.status == "Approved" || order.status == "Shipping") Color.DarkGray else Color.LightGray
+                                    )
                                 }
 
                                 OutlinedButton(
@@ -1909,7 +2031,10 @@ fun HistoryTabScreen(viewModel: OrderViewModel) {
 
                                 Spacer(modifier = Modifier.weight(1f))
 
-                                IconButton(onClick = { /* Düzenle */ }) {
+                                IconButton(onClick = { 
+                                    viewModel.editOrder(order)
+                                    onEditOrder()
+                                }) {
                                     Icon(Icons.Default.Edit, "Düzenle", tint = Color(0xFF3F51B5), modifier = Modifier.size(24.dp))
                                 }
 
@@ -2055,7 +2180,7 @@ fun SettingsTabScreen(viewModel: OrderViewModel, googleSignInClient: GoogleSignI
     val logoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        // Logo yükleme mantığı buraya gelecek
+        uri?.let { viewModel.updateCompanyLogo(context, it) }
     }
 
     val backupPickerLauncher = rememberLauncherForActivityResult(
@@ -2065,7 +2190,7 @@ fun SettingsTabScreen(viewModel: OrderViewModel, googleSignInClient: GoogleSignI
             viewModel.importBackup(
                 context = context,
                 uri = it,
-                onSuccess = { Toast.makeText(context, "Yedek başarıyla yüklendi!", Toast.LENGTH_SHORT).show() },
+                onSuccess = { Toast.makeText(context, context.getString(R.string.backup_success), Toast.LENGTH_SHORT).show() },
                 onError = { error -> Toast.makeText(context, error, Toast.LENGTH_LONG).show() }
             )
         }
@@ -2114,7 +2239,7 @@ fun SettingsTabScreen(viewModel: OrderViewModel, googleSignInClient: GoogleSignI
                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
                     ) {
                         Text(
-                            if (isAdmin) "Bireysel Moda Geç" 
+                            if (isAdmin) stringResource(R.string.make_me_individual) 
                             else stringResource(R.string.make_me_admin), 
                             color = Color.White
                         )
@@ -2151,7 +2276,7 @@ fun SettingsTabScreen(viewModel: OrderViewModel, googleSignInClient: GoogleSignI
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(member.email, fontWeight = FontWeight.SemiBold)
-                                    Text("Role: Sales Rep", fontSize = 11.sp)
+                                    Text(stringResource(R.string.staff_role), fontSize = 11.sp)
                                 }
                                 IconButton(onClick = { viewModel.removeTeamMember(member.uid) }) {
                                     Icon(Icons.Default.PersonRemove, null, tint = MaterialTheme.colorScheme.error)
@@ -2344,12 +2469,12 @@ fun UserGuideDialog(onDismiss: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Kullanım Kılavuzu",
+                        text = stringResource(R.string.guide_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Kapat")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(android.R.string.cancel))
                     }
                 }
 
@@ -2360,21 +2485,21 @@ fun UserGuideDialog(onDismiss: () -> Unit) {
                         .padding(horizontal = 16.dp)
                 ) {
                     GuideSection(
-                        title = "1. Genel Kullanım",
-                        content = "Uygulama; Sipariş girişi, Cari (Müşteri) yönetimi, Stok takibi ve Sevkiyat kontrolü aşamalarından oluşur. Siparişlerinizi oluşturduktan sonra 'Geçmiş' sekmesinden onaylayabilir ve PDF olarak paylaşabilirsiniz."
+                        title = stringResource(R.string.guide_sec1_title),
+                        content = stringResource(R.string.guide_sec1_content)
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     GuideSection(
-                        title = "2. Excel ile Veri Aktarımı",
-                        content = "Stok ve Cari kartlarınızı tek tek eklemek yerine Excel üzerinden topluca yükleyebilirsiniz. Dosyanızın ilk satırı başlık olmalı, veriler 2. satırdan başlamalıdır."
+                        title = stringResource(R.string.guide_sec2_title),
+                        content = stringResource(R.string.guide_sec2_content)
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     TemplateSection(
-                        title = "Stok Aktarım Şablonu (Excel)",
+                        title = stringResource(R.string.guide_stock_template),
                         items = listOf(
                             "A" to "Kart Kodu",
                             "B" to "Açıklama",
@@ -2389,7 +2514,7 @@ fun UserGuideDialog(onDismiss: () -> Unit) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     TemplateSection(
-                        title = "Cari Aktarım Şablonu (Excel)",
+                        title = stringResource(R.string.guide_customer_template),
                         items = listOf(
                             "A" to "Cari Kodu",
                             "B" to "Ünvan",
@@ -2409,8 +2534,8 @@ fun UserGuideDialog(onDismiss: () -> Unit) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     GuideSection(
-                        title = "3. Sevkiyat Takibi",
-                        content = "Onaylanan siparişler sevk edilebilir duruma geçer. 'Sevk Et' butonu ile parçalı sevkiyat yapabilirsiniz. Miktar girildiğinde sistem 'Kalan' miktarı otomatik hesaplar ve sipariş tamamlandığında durumunu günceller."
+                        title = stringResource(R.string.guide_sec3_title),
+                        content = stringResource(R.string.guide_sec3_content)
                     )
                     
                     Spacer(modifier = Modifier.height(24.dp))
@@ -2425,7 +2550,7 @@ fun UserGuideDialog(onDismiss: () -> Unit) {
                     shape = MaterialTheme.shapes.extraLarge,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3F51B5))
                 ) {
-                    Text("Anladım", color = Color.White)
+                    Text(stringResource(R.string.guide_understand), color = Color.White)
                 }
             }
         }

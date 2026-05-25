@@ -1,0 +1,79 @@
+<resources>
+    <string name="app_name">Genel Sipariş Formu</string>
+
+    <!-- Sekmeler -->
+    <string name="tab_order">Sipariş</string>
+    <string name="tab_customers">Cariler</string>
+    <string name="tab_stocks">Stoklar</string>
+    <string name="tab_history">Geçmiş</string>
+    <string name="tab_reports">Raporlar</string>
+    <string name="tab_settings">Ayarlar</string>
+
+    <!-- Giriş Ekranı -->
+    <string name="login_title">Giriş Yapın</string>
+    <string name="register_title">Hesap Oluşturun</string>
+    <string name="email">E-Posta</string>
+    <string name="password">Şifre</string>
+    <string name="login_btn">Giriş Yap</string>
+    <string name="register_btn">Kayıt Ol</string>
+    <string name="google_login">Google ile Giriş Yap</string>
+
+    <!-- Ayarlar Ekranı -->
+    <string name="team_management">Ekip Yönetimi</string>
+    <string name="company_logo">Şirket Logosu</string>
+    <string name="data_backup">Veri Yedekleme</string>
+    <string name="about_app">Uygulama Hakkında</string>
+    <string name="make_me_admin">Admin Yap</string>
+    <string name="current_role">Mevcut Rol: %1$s</string>
+    <string name="individual_desc">Şu an bireysel hesaptasınız. Satış ekibi kurmak için Admin moduna geçebilirsiniz.</string>
+    <string name="upload_logo_desc">PDF formlarında görünecek logonuzu yükleyin.</string>
+    <string name="upload_logo_btn">Logo Yükle (PNG/JPG)</string>
+    <string name="export_desc">Tüm verilerinizi dosya olarak dışa aktarabilir veya geri yükleyebilirsiniz.</string>
+    <string name="backup_now">Şimdi Yedekle (Dışa Aktar)</string>
+    <string name="restore_backup">Yedekten Geri Yükle (İçe Aktar)</string>
+    <string name="version">Versiyon: %1$s</string>
+    <string name="user_guide">Kullanım Kılavuzu</string>
+    <string name="logged_in_as">Oturum açan:</string>
+    <string name="logout">Oturumu Kapat</string>
+    <string name="staff_add">Personel Ekle</string>
+    <string name="staff_list">Satış Ekibiniz (%1$d)</string>
+    <string name="no_team_members">Henüz ekip üyesi yok.</string>
+
+    <!-- Diğer -->
+    <string name="search_placeholder">Ara...</string>
+    <string name="customer_select">Cari Kart Seç</string>
+    <string name="order_confirm">Siparişi Onayla</string>
+    <string name="total">Toplam</string>
+
+    <!-- Sipariş Formu PDF -->
+    <string name="pdf_order_form">SİPARİŞ FORMU</string>
+    <string name="pdf_customer_info">Müşteri Bilgileri:</string>
+    <string name="pdf_order_info">Sipariş Bilgileri:</string>
+    <string name="pdf_customer_code">Cari Kod: %1$s</string>
+    <string name="pdf_phone">Telefon: %1$s</string>
+    <string name="pdf_region">Bölge: %1$s</string>
+    <string name="pdf_address">Açık Adres: %1$s</string>
+    <string name="pdf_date">Başlangıç: %1$s</string>
+    <string name="pdf_order_no">Sipariş No: %1$s</string>
+    <string name="pdf_payment_term">Vade: %1$s</string>
+    <string name="pdf_sales_rep">Satış Elemanı: %1$s</string>
+    <string name="pdf_description">Açıklama</string>
+    <string name="pdf_quantity">Miktar</string>
+    <string name="pdf_unit_price">Birim Fiyatı</string>
+    <string name="pdf_line_total">Toplam</string>
+    <string name="pdf_subtotal">ARA TOPLAM: %1$s %2$s</string>
+    <string name="pdf_tax_total">KDV TOPLAM: %1$s %2$s</string>
+    <string name="pdf_grand_total">GENEL TOPLAM: %1$s %2$s</string>
+
+    <!-- Rapor PDF -->
+    <string name="pdf_report_title">SİPARİŞ RAPORU</string>
+    <string name="pdf_col_date">Başlangıç</string>
+    <string name="pdf_col_customers">Cari Kartlar</string>
+    <string name="pdf_col_qty">Miktar</string>
+    <string name="pdf_col_shipped">Sevk</string>
+    <string name="pdf_col_rem">Kalan</string>
+    <string name="pdf_col_total_amount">T.Tutar</string>
+    <string name="pdf_col_shipped_amount">S.Tutar</string>
+    <string name="pdf_col_rem_amount">K.Tutar</string>
+    <string name="pdf_summary_total">TOPLAM</string>
+</resources>

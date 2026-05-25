@@ -17,31 +17,158 @@
     <string name="login_btn">Giriş Yap</string>
     <string name="register_btn">Kayıt Ol</string>
     <string name="google_login">Google ile Giriş Yap</string>
+    <string name="already_have_account">Already have an account? Login</string>
+    <string name="dont_have_account">Don\'t have an account? Register</string>
 
-    <!-- Ayarlar Ekranı -->
-    <string name="team_management">Ekip Yönetimi</string>
-    <string name="company_logo">Şirket Logosu</string>
-    <string name="data_backup">Veri Yedekleme</string>
-    <string name="about_app">Uygulama Hakkında</string>
-    <string name="make_me_admin">Admin Yap</string>
-    <string name="current_role">Mevcut Rol: %1$s</string>
-    <string name="individual_desc">Şu an bireysel hesaptasınız. Satış ekibi kurmak için Admin moduna geçebilirsiniz.</string>
-    <string name="upload_logo_desc">PDF formlarında görünecek logonuzu yükleyin.</string>
-    <string name="upload_logo_btn">Logo Yükle (PNG/JPG)</string>
-    <string name="export_desc">Tüm verilerinizi dosya olarak dışa aktarabilir veya geri yükleyebilirsiniz.</string>
-    <string name="backup_now">Şimdi Yedekle (Dışa Aktar)</string>
-    <string name="restore_backup">Yedekten Geri Yükle (İçe Aktar)</string>
-    <string name="version">Versiyon: %1$s</string>
-    <string name="user_guide">Kullanım Kılavuzu</string>
-    <string name="logged_in_as">Oturum açan:</string>
-    <string name="logout">Oturumu Kapat</string>
-    <string name="staff_add">Personel Ekle</string>
-    <string name="staff_list">Satış Ekibiniz (%1$d)</string>
-    <string name="no_team_members">Henüz ekip üyesi yok.</string>
+    <!-- Settings Screen -->
+    <string name="team_management">Team Management</string>
+    <string name="company_logo">Company Logo</string>
+    <string name="data_backup">Data Backup</string>
+    <string name="about_app">About App</string>
+    <string name="make_me_admin">Make me Admin</string>
+    <string name="make_me_individual">Make me Individual</string>
+    <string name="staff_role">Role: Sales Rep</string>
+    <string name="backup_success">Backup loaded successfully!</string>
+    <string name="excel_import_success">%1$d items imported.</string>
+    <string name="excel_import_error">Error: Excel could not be read or format is incorrect.</string>
+    <string name="current_role">Current Role: %1$s</string>
+    <string name="individual_desc">You are currently on an individual account. You can switch to Admin mode to set up a sales team.</string>
+    <string name="upload_logo_desc">Upload your logo to appear on PDF forms.</string>
+    <string name="upload_logo_btn">Upload Logo (PNG/JPG)</string>
+    <string name="export_desc">You can export all your data as a file or restore it.</string>
+    <string name="backup_now">Backup Now (Export)</string>
+    <string name="restore_backup">Restore from Backup (Import)</string>
+    <string name="version">Version: %1$s</string>
+    <string name="user_guide">User Guide</string>
+    <string name="logged_in_as">Logged in as:</string>
+    <string name="logout">Logout</string>
+    <string name="staff_add">Add Staff</string>
+    <string name="staff_list">Sales Team (%1$d)</string>
+    <string name="no_team_members">No team members yet.</string>
 
-    <!-- Diğer -->
-    <string name="search_placeholder">Ara...</string>
-    <string name="customer_select">Cari Kart Seç</string>
-    <string name="order_confirm">Siparişi Onayla</string>
-    <string name="total">Toplam</string>
+    <!-- Order Tab -->
+    <string name="edit_order">Edit Order</string>
+    <string name="please_select_customer">Please Select Customer</string>
+    <string name="customer_code_phone">Code: %1$s | Tel: %2$s</string>
+    <string name="search_product">Search Product or Code</string>
+    <string name="no_stocks_defined">No stocks defined yet.\nPlease add from Stocks tab.</string>
+    <string name="no_products_found">No products found matching criteria.</string>
+    <string name="go_to_cart">Go to Cart (%1$d Items)</string>
+    <string name="cart_qty_badge">%1$d Qty</string>
+
+    <!-- Cart Screen -->
+    <string name="cart_title">Order Cart</string>
+    <string name="subtotal_label">Subtotal:</string>
+    <string name="tax_total_label">Tax Total:</string>
+    <string name="grand_total_label">Grand Total:</string>
+    <string name="confirm_and_share_pdf">Confirm and Share (PDF)</string>
+    <string name="tax_status">Tax Status</string>
+    <string name="tax_included">Prices include Tax</string>
+    <string name="tax_excluded">Prices exclude Tax</string>
+    <string name="ordered_products">Ordered Products</string>
+    <string name="payment_term_label">Payment Term</string>
+    <string name="delivery_date_label">Delivery Date:</string>
+    <string name="select_date">Select Date</string>
+    <string name="date_not_selected">Not selected</string>
+
+    <!-- Customer Management -->
+    <string name="customer_select">Select Customer</string>
+    <string name="customer_mgmt_title">Customer Management</string>
+    <string name="search_customer">Search Customer</string>
+    <string name="no_customers_found">No customers found.\nYou can import from Excel or add manually.</string>
+    <string name="add_customer">Add Customer</string>
+    <string name="edit_customer">Edit Customer</string>
+    <string name="customer_code_req">Customer Code (Required)</string>
+    <string name="customer_name_req">Name / Title (Required)</string>
+
+    <!-- Stock Management -->
+    <string name="stock_mgmt_title">Stock Management</string>
+    <string name="search_stock">Search Stock</string>
+    <string name="add_stock">Add Stock</string>
+    <string name="edit_stock">Edit Stock</string>
+
+    <!-- Order Management (History) -->
+    <string name="order_mgmt_title">Order Management</string>
+    <string name="no_orders_found">No registered orders found.</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_shipping">Shipping</string>
+    <string name="status_approved">Approved</string>
+    <string name="status_pending">Pending</string>
+    <string name="shipped_percent">Shipping: %%%1$d</string>
+    <string name="remaining_qty">Remaining: %1$s</string>
+    <string name="approve">Approve</string>
+    <string name="ship_it">Ship</string>
+
+    <!-- PDF Preview -->
+    <string name="pdf_preview">PDF Preview</string>
+    <string name="share_order_action">Share Order via WhatsApp / Email</string>
+
+    <!-- Other -->
+    <string name="search_placeholder">Search...</string>
+    <string name="order_confirm">Order Confirmed</string>
+    <string name="total">Total</string>
+
+    <!-- Order Form PDF -->
+    <string name="pdf_order_form">ORDER FORM</string>
+    <string name="pdf_customer_info">Customer Information:</string>
+    <string name="pdf_order_info">Order Information:</string>
+    <string name="pdf_customer_code">Customer Code: %1$s</string>
+    <string name="pdf_phone">Phone: %1$s</string>
+    <string name="pdf_region">Region: %1$s</string>
+    <string name="pdf_address">Address: %1$s</string>
+    <string name="pdf_date">Start Date: %1$s</string>
+    <string name="pdf_order_no">Order No: %1$s</string>
+    <string name="pdf_payment_term">Payment Term: %1$s</string>
+    <string name="pdf_sales_rep">Sales Rep: %1$s</string>
+    <string name="pdf_description">Description</string>
+    <string name="pdf_quantity">Quantity</string>
+    <string name="pdf_unit_price">Unit Price</string>
+    <string name="pdf_line_total">Total</string>
+    <string name="pdf_subtotal">SUBTOTAL: %1$s %2$s</string>
+    <string name="pdf_tax_total">TAX TOTAL: %1$s %2$s</string>
+    <string name="pdf_grand_total">GRAND TOTAL: %1$s %2$s</string>
+
+    <!-- Report PDF -->
+    <string name="pdf_report_title">ORDER REPORT</string>
+    <string name="pdf_col_date">Date</string>
+    <string name="pdf_col_customers">Customers</string>
+    <string name="pdf_col_qty">Qty</string>
+    <string name="pdf_col_shipped">Shipped</string>
+    <string name="pdf_col_rem">Rem.</string>
+    <string name="pdf_col_total_amount">T.Amount</string>
+    <string name="pdf_col_shipped_amount">S.Amount</string>
+    <string name="pdf_col_rem_amount">R.Amount</string>
+    <string name="pdf_summary_total">TOTAL</string>
+
+    <string name="page_orientation">Sayfa Yönü</string>
+    <string name="portrait">Dikey</string>
+    <string name="landscape">Yatay</string>
+    <string name="results_count">Sonuçlar (%1$d)</string>
+    <string name="excel_btn">Excel</string>
+
+    <!-- User Guide -->
+    <string name="guide_title">User Guide</string>
+    <string name="guide_sec1_title">1. General Usage</string>
+    <string name="guide_sec1_content">The application consists of Order entry, Customer management, Stock tracking, and Shipping control stages. After creating your orders, you can approve them from the \'History\' tab and share them as PDF.</string>
+    <string name="guide_sec2_title">2. Data Transfer with Excel</string>
+    <string name="guide_sec2_content">Instead of adding your Stock and Customer cards one by one, you can upload them in bulk via Excel. The first row of your file should be the header, and data should start from the 2nd row.</string>
+    <string name="guide_sec3_title">3. Shipping Tracking</string>
+    <string name="guide_sec3_content">Approved orders become shippable. You can make partial shipments with the \'Ship\' button. When the quantity is entered, the system automatically calculates the \'Remaining\' quantity and updates the order status when completed.</string>
+    <string name="guide_stock_template">Stock Transfer Template (Excel)</string>
+    <string name="guide_customer_template">Customer Transfer Template (Excel)</string>
+    <string name="guide_understand">I Understand</string>
+
+    <!-- Excel Export -->
+    <string name="excel_report_sheet">Order Report</string>
+    <string name="excel_col_date">Date</string>
+    <string name="excel_col_customer">Customer Title</string>
+    <string name="excel_col_qty">Quantity</string>
+    <string name="excel_col_shipped">Shipped</string>
+    <string name="excel_col_rem">Remaining</string>
+    <string name="excel_col_total_amount">Total Amount</string>
+    <string name="excel_col_shipped_amount">Shipped Amount</string>
+    <string name="excel_col_rem_amount">Remaining Amount</string>
+    <string name="excel_summary_total">GRAND TOTAL:</string>
+
+    <string name="default_web_client_id">23047510922-e0o609h772usbtal0ro8uj05nd5nefc5.apps.googleusercontent.com</string>
 </resources>
