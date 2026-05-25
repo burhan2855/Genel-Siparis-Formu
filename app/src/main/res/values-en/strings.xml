@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">General Order Form</string>
+
+    <!-- Tabs -->
+    <string name="tab_order">Order</string>
+    <string name="tab_customers">Customers</string>
+    <string name="tab_stocks">Stocks</string>
+    <string name="tab_history">History</string>
+    <string name="tab_reports">Reports</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Login</string>
+    <string name="register_title">Create Account</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login_btn">Login</string>
+    <string name="register_btn">Register</string>
+    <string name="google_login">Login with Google</string>
+
+    <!-- Settings Screen -->
+    <string name="team_management">Team Management</string>
+    <string name="company_logo">Company Logo</string>
+    <string name="data_backup">Data Backup</string>
+    <string name="about_app">About App</string>
+    <string name="make_me_admin">Make Me Admin</string>
+    <string name="current_role">Current Role: %1$s</string>
+    <string name="individual_desc">You are currently in individual account. You can switch to Admin mode to build a sales team.</string>
+    <string name="upload_logo_desc">Upload your logo to appear on PDF forms.</string>
+    <string name="upload_logo_btn">Upload Logo (PNG/JPG)</string>
+    <string name="export_desc">You can export all your data as a file or restore it.</string>
+    <string name="backup_now">Backup Now (Export)</string>
+    <string name="restore_backup">Restore from Backup (Import)</string>
+    <string name="version">Version: %1$s</string>
+    <string name="user_guide">User Guide</string>
+    <string name="logged_in_as">Logged in as:</string>
+    <string name="logout">Logout</string>
+    <string name="staff_add">Add Staff</string>
+    <string name="staff_list">Your Sales Team (%1$d)</string>
+    <string name="no_team_members">No team members yet.</string>
+
+    <!-- Others -->
+    <string name="search_placeholder">Search...</string>
+    <string name="customer_select">Select Customer</string>
+    <string name="order_confirm">Confirm Order</string>
+    <string name="total">Total</string>
+</resources>

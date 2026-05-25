@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "23047510922",
+    "project_id": "genel-siparis-formu",
+    "storage_bucket": "genel-siparis-formu.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:23047510922:android:6c89324c8371ee63a44673",
+        "android_client_info": {
+          "package_name": "com.burhan2855.genelsiparisformu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "23047510922-e0o609h772usbtal0ro8uj05nd5nefc5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.burhan2855.genelsiparisformu",
+            "certificate_hash": "193725dcecd7123cdc3f0f6f1b2f9a0643d66327"
+          }
+        },
+        {
+          "client_id": "23047510922-5f6tlktv5a2dtuhjh7tvgtfbimuqeif4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFEGqzeYXWF-KZ4eZv4OG0cGt2s14DX3Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "23047510922-5f6tlktv5a2dtuhjh7tvgtfbimuqeif4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
